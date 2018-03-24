@@ -23,9 +23,10 @@ def get_dates_between(startDate, endDate):
 	return allDates
 
 def url_to_stats(url):
-	allPlayers = {}
-	emptyPlayerStats = {}
-
+	#returns a dictionary containing the information about a single game
+	# allPlayers = {}
+	# emptyPlayerStats = {}
+	gameInfo = {}
 
 	#http = urllib3.PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=certifi.where())
 	#r = http.request("GET", "https://www.basketball-reference.com/boxscores/201803120OKC.html")
@@ -47,10 +48,19 @@ def url_to_stats(url):
 	date = title[1].split(" |")[0]
 	awayTeam = teamsPlaying.split(" at ")[0]
 	homeTeam = teamsPlaying.split(" at ")[1]
+	teamsList = {"away" : awayTeam, "home" : homeTeam}
+	gameInfo["teams"] = teamsList
+
+
+
 
 	scores = soup.find_all("div", class_="score")
 	awayScore = int(scores[0].get_text())
 	homeScore = int(scores[1].get_text())
+
+	scoresList = {"away" : awayScore, "home" : homeScore}
+	gameInfo["scores"] = scoresList
+
 	print()
 	print("home team: %s %d" % (homeTeam, homeScore))
 	print("away team: %s %d" % (awayTeam, awayScore))
@@ -103,6 +113,7 @@ def url_to_stats(url):
 					print ("%s: %d" % (statCategory, stat))
 				except:
 					print ("%s: %s" % (statCategory, stat))
+	return gameInfo
 
 
 def day_to_boxscore_url(date):
@@ -140,7 +151,7 @@ def main():
 	# for day in dates:
 	# 	boxscoreLinks = day_to_boxscore_url(day)
 	# 	for url in boxscoreLinks:
-	# 		url_to_stats(url)
+	# 		game = url_to_stats(url)
 
 
 	url = "https://www.basketball-reference.com/boxscores/201711070POR.html"
