@@ -27,6 +27,10 @@ def url_to_stats(url):
 	# allPlayers = {}
 	# emptyPlayerStats = {}
 	gameInfo = {}
+	homeStats = {}
+	awayStats = {}
+	homePlayers = {}
+	awayPlayers = {}
 
 	#http = urllib3.PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=certifi.where())
 	#r = http.request("GET", "https://www.basketball-reference.com/boxscores/201803120OKC.html")
@@ -40,6 +44,8 @@ def url_to_stats(url):
 	response = requests.get(url)
 	soup = BeautifulSoup(response.content, "html.parser")
 
+
+	print(soup.prettify())
 
 	#finds the home and away teams
 	#hard-coded
@@ -86,33 +92,66 @@ def url_to_stats(url):
 				print()
 				print(playerName)
 			
-
+			playerDict = {}
 			for data in allData:
-				try:
-					stat = int(data.get_text())
-				except:
-					stat = data.get_text()
-				statCategory = data.get("data-stat")
-				try:
-					print ("%s: %d" % (statCategory, stat))
-				except:
-					print ("%s: %s" % (statCategory, stat))
+				if data.get_text() == "":
+					stat = 0
+				else:
+					try:
+						stat = int(data.get_text())
+					except:
+						try:
+							stat = float(data.get_text())
+						except:
+							timePlayed = datetime.datetime.strptime(data.get_text(), "%M:%S")
+							minutes = timePlayed.minute
+							seconds = timePlayed.second/60
+							stat = minutes + seconds
+					statCategory = data.get("data-stat")
+					if type(stat) == int:
+						print("%s: %d" % (statCategory, stat))
+					elif type(stat) == float:
+						print ("%s: %f" % (statCategory, stat))
+					else:
+						print ("%s: %s" % (statCategory, stat))
+				playerDict[statCategory] = stat
+			if memberTeam == homeTeam:
+				homePlayers[playerName] = playerDict
+			else:
+				awayPlayers[playerName] = playerDict
 		foot = teams[i].find("tfoot")
 		allRows = foot.find_all("tr")
 		print()
 		print("Team Totals")
+		teamDict = {}
 		for row in allRows:
 			allData = row.find_all("td")
 			for data in allData:
 				try:
 					stat = int(data.get_text())
 				except:
-					stat = data.get_text()
+					try:
+						stat = float(data.get_text())
+					except:
+						if memberTeam == awayTeam:
+							stat = awayScore - homeScore
+						else:
+							stat = homeScore - awayScore
 				statCategory = data.get("data-stat")
-				try:
+				teamDict[statCategory] = stat
+				if type(stat) == int:
 					print ("%s: %d" % (statCategory, stat))
-				except:
-					print ("%s: %s" % (statCategory, stat))
+				else:
+					print ("%s: %.3f" % (statCategory, stat))
+		if memberTeam == homeTeam:
+			homeStats.update(teamDict)
+		else:
+			awayStats.update(teamDict)
+	gameInfo["home stats"] = homeStats
+	gameInfo["away stats"] = awayStats
+	gameInfo["home players"] = homePlayers
+	gameInfo["away players"] = awayPlayers
+
 	return gameInfo
 
 
@@ -155,7 +194,7 @@ def main():
 
 
 	url = "https://www.basketball-reference.com/boxscores/201711070POR.html"
-	url_to_stats(url)
+	print(url_to_stats(url).get("home players").get("C.J. McCollum").get("off_rtg"))
 
 
 	# allPlayers = {}
@@ -171,7 +210,7 @@ def main():
 	# response = requests.get(url)
 	# soup = BeautifulSoup(response.content, "html.parser")
 
-	# # print(soup.prettify())
+	# #print(soup.prettify())
 
 	# #finds the home and away teams
 	# #hard-coded
