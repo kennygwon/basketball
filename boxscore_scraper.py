@@ -38,14 +38,14 @@ def url_to_stats(url):
 	# url = "https://www.basketball-reference.com/boxscores/201710210CLE.html"
 
 
-	url = "https://www.basketball-reference.com/boxscores/201711070POR.html"
+	# url = "https://www.basketball-reference.com/boxscores/201711070POR.html"
 
 
 	response = requests.get(url)
 	soup = BeautifulSoup(response.content, "html.parser")
 
 
-	print(soup.prettify())
+	# print(soup.prettify())
 
 	#finds the home and away teams
 	#hard-coded
@@ -71,7 +71,18 @@ def url_to_stats(url):
 	print("home team: %s %d" % (homeTeam, homeScore))
 	print("away team: %s %d" % (awayTeam, awayScore))
 	
-	teams = soup.find_all("table")
+	#creates teams which is a list of all the tables on the webpage
+	#the try/except prevents tables with only pictures of the boxscore from being added
+	teams = []
+	tables = soup.find_all("table")
+	for table in tables:
+		try:
+			tableBody = table.find("tbody")
+			tableBody.find_all("tr")
+			teams.append(table)
+		except:
+			pass
+
 	for i in range(len(teams)):
 		if i < len(teams)/2:
 			memberTeam = awayTeam
@@ -96,6 +107,7 @@ def url_to_stats(url):
 			for data in allData:
 				if data.get_text() == "":
 					stat = 0
+					statCategory = data.get("data-stat")
 				else:
 					try:
 						stat = int(data.get_text())
@@ -154,6 +166,12 @@ def url_to_stats(url):
 
 	return gameInfo
 
+def getSeason(url):
+	response = requests.get(url)
+	soup = BeautifulSoup(response.content, "html.parser")
+	season =soup.find_all("ul")[4].find_all("li")[2].get_text().split(" NBA")[0]
+	# print(soup.prettify())
+
 
 def day_to_boxscore_url(date):
 	#this function takes in a date and outputs the links of all the games on that day
@@ -193,8 +211,12 @@ def main():
 	# 		game = url_to_stats(url)
 
 
-	url = "https://www.basketball-reference.com/boxscores/201711070POR.html"
-	print(url_to_stats(url).get("home players").get("C.J. McCollum").get("off_rtg"))
+	# url = "https://www.basketball-reference.com/boxscores/201711070POR.html"
+	url = "https://www.basketball-reference.com/boxscores/197610220KCK.html"
+	getSeason(url)
+	# oldDictionary = url_to_stats(url)
+	# print(oldDictionary.get("home players").get("Jim Eakins"))
+	# print(url_to_stats(url).get("home players").get("C.J. McCollum").get("off_rtg"))
 
 
 	# allPlayers = {}
