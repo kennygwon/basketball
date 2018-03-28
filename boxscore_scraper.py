@@ -170,6 +170,7 @@ def getSeason(url):
 	response = requests.get(url)
 	soup = BeautifulSoup(response.content, "html.parser")
 	season =soup.find_all("ul")[4].find_all("li")[2].get_text().split(" NBA")[0]
+	return season
 	# print(soup.prettify())
 
 
@@ -211,9 +212,45 @@ def main():
 	# 		game = url_to_stats(url)
 
 
-	# url = "https://www.basketball-reference.com/boxscores/201711070POR.html"
-	url = "https://www.basketball-reference.com/boxscores/197610220KCK.html"
-	getSeason(url)
+	url = "https://www.basketball-reference.com/boxscores/201711070POR.html"
+	# url = "https://www.basketball-reference.com/boxscores/197610220KCK.html"
+	season = getSeason(url)
+	seasonTextFile = season + ".txt"
+	print(season)
+
+	try:	
+		file = open(seasonTextFile, "r")
+		file.close()
+		with open(seasonTextFile) as seasonJSONfile:
+			currentDictionary = json.load(seasonJSONfile)
+	except:
+		file = open(seasonTextFile, "w")
+		file.close()
+		currentDictionary = {}
+	gameDictionary = url_to_stats(url)
+	print(gameDictionary.keys())
+	print(gameDictionary.get("teams").get("home"))
+
+	if currentDictionary.get(gameDictionary.get("teams").get("home")) == None:
+		currentDictionary[gameDictionary.get("teams").get("home")] = [gameDictionary]
+	else:
+		currentDictionary.get(gameDictionary.get("teams").get("home")).append(gameDictionary)
+	if currentDictionary.get(gameDictionary.get("teams").get("away")) == None:
+		currentDictionary[gameDictionary.get("teams").get("away")] = [gameDictionary]
+	else:
+		currentDictionary.get(gameDictionary.get("teams").get("away")).append(gameDictionary)
+	
+	with open(seasonTextFile, "w") as outfile:
+		json.dump(currentDictionary, outfile)
+
+
+
+
+
+
+	
+
+
 	# oldDictionary = url_to_stats(url)
 	# print(oldDictionary.get("home players").get("Jim Eakins"))
 	# print(url_to_stats(url).get("home players").get("C.J. McCollum").get("off_rtg"))
