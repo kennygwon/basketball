@@ -67,9 +67,9 @@ def url_to_stats(url):
 	scoresList = {"away" : awayScore, "home" : homeScore}
 	gameInfo["scores"] = scoresList
 
-	print()
-	print("home team: %s %d" % (homeTeam, homeScore))
-	print("away team: %s %d" % (awayTeam, awayScore))
+	# print()
+	# print("home team: %s %d" % (homeTeam, homeScore))
+	# print("away team: %s %d" % (awayTeam, awayScore))
 	
 	#creates teams which is a list of all the tables on the webpage
 	#the try/except prevents tables with only pictures of the boxscore from being added
@@ -88,8 +88,8 @@ def url_to_stats(url):
 			memberTeam = awayTeam
 		else:
 			memberTeam = homeTeam
-		print()
-		print(memberTeam)
+		# print()
+		# print(memberTeam)
 		body = teams[i].find("tbody")
 		allRows = body.find_all("tr")
 		for row in allRows:
@@ -100,8 +100,8 @@ def url_to_stats(url):
 			#eliminates starters and reserves heading
 			if len(allData) > 0:
 				playerName = row.find("th").get_text()
-				print()
-				print(playerName)
+				# print()
+				# print(playerName)
 			
 			playerDict = {}
 			for data in allData:
@@ -120,12 +120,12 @@ def url_to_stats(url):
 							seconds = timePlayed.second/60
 							stat = minutes + seconds
 					statCategory = data.get("data-stat")
-					if type(stat) == int:
-						print("%s: %d" % (statCategory, stat))
-					elif type(stat) == float:
-						print ("%s: %f" % (statCategory, stat))
-					else:
-						print ("%s: %s" % (statCategory, stat))
+					# if type(stat) == int:
+						# print("%s: %d" % (statCategory, stat))
+					# elif type(stat) == float:
+					# 	print ("%s: %f" % (statCategory, stat))
+					# else:
+					# 	print ("%s: %s" % (statCategory, stat))
 				playerDict[statCategory] = stat
 			if memberTeam == homeTeam:
 				homePlayers[playerName] = playerDict
@@ -133,8 +133,8 @@ def url_to_stats(url):
 				awayPlayers[playerName] = playerDict
 		foot = teams[i].find("tfoot")
 		allRows = foot.find_all("tr")
-		print()
-		print("Team Totals")
+		# print()
+		# print("Team Totals")
 		teamDict = {}
 		for row in allRows:
 			allData = row.find_all("td")
@@ -151,10 +151,10 @@ def url_to_stats(url):
 							stat = homeScore - awayScore
 				statCategory = data.get("data-stat")
 				teamDict[statCategory] = stat
-				if type(stat) == int:
-					print ("%s: %d" % (statCategory, stat))
-				else:
-					print ("%s: %.3f" % (statCategory, stat))
+				# if type(stat) == int:
+				# 	print ("%s: %d" % (statCategory, stat))
+				# else:
+				# 	print ("%s: %.3f" % (statCategory, stat))
 		if memberTeam == homeTeam:
 			homeStats.update(teamDict)
 		else:
@@ -201,47 +201,53 @@ def main():
 	# print(today())
 
 	today = datetime.date.today()
-	lastDate = datetime.date(today.year, 3, 20)
-	firstDate = datetime.date(2018, 3, 20)
+	lastDate = datetime.date.today()
+	firstDate = datetime.date(2016, 7, 5)
+
+	# lastDate = datetime.date(today.year, 3, 20)
+	# firstDate = datetime.date(2018, 3, 20)
 
 
-	# dates = get_dates_between(firstDate, lastDate)
-	# for day in dates:
-	# 	boxscoreLinks = day_to_boxscore_url(day)
-	# 	for url in boxscoreLinks:
-	# 		game = url_to_stats(url)
+	dates = get_dates_between(firstDate, lastDate)
+	for day in dates:
+		boxscoreLinks = day_to_boxscore_url(day)
+		for url in boxscoreLinks:
+			# game = url_to_stats(url)
 
 
-	url = "https://www.basketball-reference.com/boxscores/201711070POR.html"
+	# url = "https://www.basketball-reference.com/boxscores/201711070POR.html"
 	# url = "https://www.basketball-reference.com/boxscores/197610220KCK.html"
-	season = getSeason(url)
-	seasonTextFile = season + ".txt"
-	print(season)
+			season = getSeason(url)
+			seasonTextFile = season + ".txt"
+			print(season)
 
-	try:	
-		file = open(seasonTextFile, "r")
-		file.close()
-		with open(seasonTextFile) as seasonJSONfile:
-			currentDictionary = json.load(seasonJSONfile)
-	except:
-		file = open(seasonTextFile, "w")
-		file.close()
-		currentDictionary = {}
-	gameDictionary = url_to_stats(url)
-	print(gameDictionary.keys())
-	print(gameDictionary.get("teams").get("home"))
+			try:	
+				file = open(seasonTextFile, "r")
+				file.close()
+				with open(seasonTextFile) as seasonJSONfile:
+					currentDictionary = json.load(seasonJSONfile)
+			except:
+				file = open(seasonTextFile, "w")
+				file.close()
+				currentDictionary = {}
+			gameDictionary = url_to_stats(url)
+			gameDictionary["date"] = str(day)
 
-	if currentDictionary.get(gameDictionary.get("teams").get("home")) == None:
-		currentDictionary[gameDictionary.get("teams").get("home")] = [gameDictionary]
-	else:
-		currentDictionary.get(gameDictionary.get("teams").get("home")).append(gameDictionary)
-	if currentDictionary.get(gameDictionary.get("teams").get("away")) == None:
-		currentDictionary[gameDictionary.get("teams").get("away")] = [gameDictionary]
-	else:
-		currentDictionary.get(gameDictionary.get("teams").get("away")).append(gameDictionary)
-	
-	with open(seasonTextFile, "w") as outfile:
-		json.dump(currentDictionary, outfile)
+			# print(gameDictionary.keys())
+			# print(gameDictionary.get("teams").get("home"))
+
+
+			if currentDictionary.get(gameDictionary.get("teams").get("home")) == None:
+				currentDictionary[gameDictionary.get("teams").get("home")] = [gameDictionary]
+			else:
+				currentDictionary.get(gameDictionary.get("teams").get("home")).append(gameDictionary)
+			if currentDictionary.get(gameDictionary.get("teams").get("away")) == None:
+				currentDictionary[gameDictionary.get("teams").get("away")] = [gameDictionary]
+			else:
+				currentDictionary.get(gameDictionary.get("teams").get("away")).append(gameDictionary)
+			
+			with open(seasonTextFile, "w") as outfile:
+				json.dump(currentDictionary, outfile)
 
 
 
