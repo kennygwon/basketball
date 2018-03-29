@@ -39,6 +39,7 @@ def url_to_stats(url):
 
 
 	# url = "https://www.basketball-reference.com/boxscores/201711070POR.html"
+	url = "https://www.basketball-reference.com/boxscores/201704150CLE.html"
 
 
 	response = requests.get(url)
@@ -61,9 +62,18 @@ def url_to_stats(url):
 
 
 	scores = soup.find_all("div", class_="score")
+	awayRecord = (scores[0].findNext("div").get_text().split("-"))
+	awayWins = awayRecord[0]
+	awayLosses = awayRecord[1]
+	homeRecord =(scores[1].findNext("div").get_text().split("-"))
+	homeWins = homeRecord[0]
+	homeLosses = homeRecord[1]
+
 	awayScore = int(scores[0].get_text())
 	homeScore = int(scores[1].get_text())
 
+	records = {"away losses" : awayLosses, "away wins" : awayWins, "homeLosses" : homeLosses, "homeWins" : homeWins}
+	gameInfo["records"] = records
 	scoresList = {"away" : awayScore, "home" : homeScore}
 	gameInfo["scores"] = scoresList
 
@@ -202,25 +212,27 @@ def main():
 
 	today = datetime.date.today()
 	lastDate = datetime.date.today()
-	firstDate = datetime.date(2016, 7, 5)
+	firstDate = datetime.date(2017, 5, 1)
 
 	# lastDate = datetime.date(today.year, 3, 20)
 	# firstDate = datetime.date(2018, 3, 20)
 
+	url = "https://www.basketball-reference.com/boxscores/201704150CLE.html"
+	url_to_stats(url)
 
 	dates = get_dates_between(firstDate, lastDate)
 	for day in dates:
+		print(day)
 		boxscoreLinks = day_to_boxscore_url(day)
 		for url in boxscoreLinks:
 			# game = url_to_stats(url)
 
 
-	# url = "https://www.basketball-reference.com/boxscores/201711070POR.html"
-	# url = "https://www.basketball-reference.com/boxscores/197610220KCK.html"
 			season = getSeason(url)
 			seasonTextFile = season + ".txt"
 			print(season)
 
+			#checks to see if a txt file for the season exists
 			try:	
 				file = open(seasonTextFile, "r")
 				file.close()
@@ -230,13 +242,21 @@ def main():
 				file = open(seasonTextFile, "w")
 				file.close()
 				currentDictionary = {}
+
 			gameDictionary = url_to_stats(url)
 			gameDictionary["date"] = str(day)
 
-			# print(gameDictionary.keys())
-			# print(gameDictionary.get("teams").get("home"))
+			#checks to see if a team's record is equal to the number of games they've played + 1
+			homeTeam = gameDictionary.get("teams").get("home")
+			textOutfile = seasonTextFile
+			try:
+				if len(currentDictionary.get(homeTeam)) != (currentDictionary.get("records").get("home wins") + currentDictionary.get("records").get("home wins") + 1):
+					textOutfile = season +"_playoffs" + ".txt"
+			except:
+				textOutfile = season + "_playoffs" + ".txt"
 
-
+			print(textOutfile)
+			#checks to see if the list of games for a team is empty
 			if currentDictionary.get(gameDictionary.get("teams").get("home")) == None:
 				currentDictionary[gameDictionary.get("teams").get("home")] = [gameDictionary]
 			else:
@@ -245,6 +265,7 @@ def main():
 				currentDictionary[gameDictionary.get("teams").get("away")] = [gameDictionary]
 			else:
 				currentDictionary.get(gameDictionary.get("teams").get("away")).append(gameDictionary)
+			
 			
 			with open(seasonTextFile, "w") as outfile:
 				json.dump(currentDictionary, outfile)
