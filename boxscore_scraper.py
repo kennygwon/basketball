@@ -212,7 +212,8 @@ def main():
 
 	today = datetime.date.today()
 	lastDate = datetime.date.today()
-	firstDate = datetime.date(2017, 5, 1)
+	firstDate = datetime.date(2013, 10, 3)
+	lastDate = datetime.date(2014, 7, 15)
 
 	# lastDate = datetime.date(today.year, 3, 20)
 	# firstDate = datetime.date(2018, 3, 20)
@@ -256,6 +257,18 @@ def main():
 				textOutfile = season + "_playoffs" + ".txt"
 
 			print(textOutfile)
+			if textOutfile != seasonTextFile:
+				try:	
+				file = open(textOutfile, "r")
+				file.close()
+				with open(textOutfile) as playoffJSONfile:
+					currentDictionary = json.load(playoffJSONfile)
+			except:
+				file = open(textOutfile, "w")
+				file.close()
+				currentDictionary = {}
+
+
 			#checks to see if the list of games for a team is empty
 			if currentDictionary.get(gameDictionary.get("teams").get("home")) == None:
 				currentDictionary[gameDictionary.get("teams").get("home")] = [gameDictionary]
@@ -267,7 +280,7 @@ def main():
 				currentDictionary.get(gameDictionary.get("teams").get("away")).append(gameDictionary)
 			
 			
-			with open(seasonTextFile, "w") as outfile:
+			with open(textOutfile, "w") as outfile:
 				json.dump(currentDictionary, outfile)
 
 
