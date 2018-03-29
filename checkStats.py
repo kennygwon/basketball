@@ -8,7 +8,7 @@ def main():
 	month = input("month: ")
 	day = input("day: ")
 	date = year + "-" + month + "-" + day
-	season = "2017-18"
+	season = "2013-14"
 	seasonTextFile = season + ".txt"
 	with open(seasonTextFile) as seasonJSONfile:
 		currentDictionary = json.load(seasonJSONfile)
