@@ -218,13 +218,14 @@ def main():
 
 	today = datetime.date.today()
 	lastDate = datetime.date.today()
-	firstDate = datetime.date(1990, 7, 16)
+	
+	firstDate = datetime.date(1992, 7, 16)
 	lastDate = datetime.date(2017, 7, 15)
 
 	# lastDate = datetime.date(today.year, 3, 20)
 	# firstDate = datetime.date(2018, 3, 20)
 
-	# url = "https://www.basketball-reference.com/boxscores/201704150CLE.html"
+	# url = "https://www.basketball-reference.com/boxscores/199303240PHI.html"
 	# url_to_stats(url)
 
 	dates = get_dates_between(firstDate, lastDate)
@@ -238,7 +239,6 @@ def main():
 
 			season = getSeason(url)
 			seasonTextFile = season + ".txt"
-			# print(season)
 
 			#checks to see if a txt file for the season exists
 			try:	
@@ -258,9 +258,6 @@ def main():
 			homeTeam = gameDictionary.get("teams").get("home")
 			textOutfile = seasonTextFile
 
-			# print(homeTeam)
-			# print(len(currentDictionary.get(homeTeam)))
-			# print(len(currentDictionary.get(homeTeam)))
 			try:
 				if (len(currentDictionary.get(homeTeam)) + 1) != gameDictionary.get("records").get("home wins") + gameDictionary.get("records").get("home losses"):
 					textOutfile = season +"_playoffs" + ".txt"
