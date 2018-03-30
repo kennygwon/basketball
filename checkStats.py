@@ -10,18 +10,20 @@ def main():
 	running = True
 	while running:
 		print("Print 'g' to look up stats for a single game")
-		if input()
-		year = input("year: ")
-		month = input("month: ")
-		day = input("day: ")
-		date = year + "-" + month + "-" + day
-		
-		team = input("team: ")
+		if input("'Quit' to quit") == "quit":
+			break
+		else:
+			year = input("year: ")
+			month = input("month: ")
+			day = input("day: ")
+			date = year + "-" + month + "-" + day
+			
+			team = input("team: ")
 
 
 
-	for game in currentDictionary.get(team):
-		if game.get("date") == date:
-			print(game)
+			for game in currentDictionary.get(team):
+				if game.get("date") == date:
+					print(game)
 
 main()

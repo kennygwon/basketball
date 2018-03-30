@@ -218,8 +218,8 @@ def main():
 
 	today = datetime.date.today()
 	lastDate = datetime.date.today()
-	firstDate = datetime.date(2013, 10, 28)
-	lastDate = datetime.date(2014, 7, 15)
+	firstDate = datetime.date(1990, 7, 16)
+	lastDate = datetime.date(2017, 7, 15)
 
 	# lastDate = datetime.date(today.year, 3, 20)
 	# firstDate = datetime.date(2018, 3, 20)
