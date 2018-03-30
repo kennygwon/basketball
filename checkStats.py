@@ -3,15 +3,21 @@ import json
 def main():
 	
 	season = input("season: ")
-	team = input("team: ")
-	year = input("year: ")
-	month = input("month: ")
-	day = input("day: ")
-	date = year + "-" + month + "-" + day
 	season = "2013-14"
 	seasonTextFile = season + ".txt"
 	with open(seasonTextFile) as seasonJSONfile:
 		currentDictionary = json.load(seasonJSONfile)
+	running = True
+	while running:
+		print("Print 'g' to look up stats for a single game")
+		if input()
+		year = input("year: ")
+		month = input("month: ")
+		day = input("day: ")
+		date = year + "-" + month + "-" + day
+		
+		team = input("team: ")
+
 
 
 	for game in currentDictionary.get(team):
