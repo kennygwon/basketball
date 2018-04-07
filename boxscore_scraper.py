@@ -140,11 +140,24 @@ def url_to_stats(url):
 					# 	print ("%s: %f" % (statCategory, stat))
 					# else:
 					# 	print ("%s: %s" % (statCategory, stat))
-				playerDict[statCategory] = stat
-			if memberTeam == homeTeam:
-				homePlayers[playerName] = playerDict
-			else:
-				awayPlayers[playerName] = playerDict
+				if memberTeam == homeTeam:
+					try:
+						homePlayers[playerName][statCategory] = stat
+					except:
+						homePlayers[playerName] = {}
+						homePlayers[playerName][statCategory] = stat
+				else:
+					try:
+						awayPlayers[playerName][statCategory] = stat
+					except:
+						awayPlayers[playerName] = {}
+						awayPlayers[playerName][statCategory] = stat					
+
+				# playerDict[statCategory] = stat
+			# if memberTeam == homeTeam:
+				# homePlayers[playerName] = playerDict
+			# else:
+				# awayPlayers[playerName] = playerDict
 		foot = teams[i].find("tfoot")
 		allRows = foot.find_all("tr")
 		# print()
@@ -219,8 +232,8 @@ def main():
 	today = datetime.date.today()
 	lastDate = datetime.date.today()
 	
-	firstDate = datetime.date(1989, 7, 16)
-	lastDate = datetime.date(1990, 7, 15)
+	firstDate = datetime.date(2000, 7, 16)
+	lastDate = datetime.date(2017, 7, 15)
 
 	# lastDate = datetime.date(today.year, 3, 20)
 	# firstDate = datetime.date(2018, 3, 20)

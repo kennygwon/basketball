@@ -65,7 +65,6 @@ def main():
 		for game in range(len(currentDictionary[team])):
 			if currentDictionary[team][game]["teams"]["home"] == team:
 				try:
-					print(currentDictionary[team][game]["home players"][player].keys())
 					statAccumulator += currentDictionary[team][game]["home players"][player][statistic]
 				except:
 					pass
@@ -75,7 +74,6 @@ def main():
 					statAccumulator += currentDictionary[team][game]["away players"][player][statistic]
 				except:
 					pass
-		print(statAccumulator)
 		print("%f" % (statAccumulator / len(currentDictionary[team])))
 
 main()
