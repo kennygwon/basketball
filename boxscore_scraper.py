@@ -41,13 +41,9 @@ def url_to_stats(url):
 	# url = "https://www.basketball-reference.com/boxscores/201711070POR.html"
 	# url = "https://www.basketball-reference.com/boxscores/201704150CLE.html"
 	# url = "https://www.basketball-reference.com/boxscores/201401150ORL.html"
-	invalidURL = True
-	while invalidURL:
-		try:
-			response = requests.get(url)
-			invalidURL = False
-		except:
-			pass
+
+	
+	response = requests.get(url)
 	soup = BeautifulSoup(response.content, "html.parser")
 
 
@@ -236,7 +232,7 @@ def main():
 	today = datetime.date.today()
 	lastDate = datetime.date.today()
 	
-	firstDate = datetime.date(1995, 7, 16)
+	firstDate = datetime.date(2000, 7, 16)
 	lastDate = datetime.date(2017, 7, 15)
 
 	# lastDate = datetime.date(today.year, 3, 20)
