@@ -61,20 +61,23 @@ def main():
 				print("Invalid statistic type")
 				print("Valid statistic types include:")
 				print("", " ".join(currentDictionary[team][0]["home stats"].keys()))
-		statAccumulator = 0
-		for game in range(len(currentDictionary[team])):
-			if currentDictionary[team][game]["teams"]["home"] == team:
-				try:
-					statAccumulator += currentDictionary[team][game]["home players"][player][statistic]
-				except:
-					pass
-			else:
-				# print(currentDictionary[team][game]["away players"].keys())
-				try:
-					statAccumulator += currentDictionary[team][game]["away players"][player][statistic]
-				except:
-					pass
-		print("%f" % (statAccumulator / len(currentDictionary[team])))
+		if statistic in ["fg3", "pts", "tov", "pf", "blk", "fta", "ft", "ast", "fg", "orb", "fga", "stl", "trb", "mp", "drb"]:
+			statAccumulator = 0
+			for game in range(len(currentDictionary[team])):
+				if currentDictionary[team][game]["teams"]["home"] == team:
+					try:
+						statAccumulator += currentDictionary[team][game]["home players"][player][statistic]
+					except:
+						pass
+				else:
+					# print(currentDictionary[team][game]["away players"].keys())
+					try:
+						statAccumulator += currentDictionary[team][game]["away players"][player][statistic]
+					except:
+						pass
+			print("%f" % (statAccumulator / len(currentDictionary[team])))
+		#else:
+		#TODO: all the other statistics
 
 main()
 

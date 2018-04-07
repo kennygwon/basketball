@@ -41,9 +41,13 @@ def url_to_stats(url):
 	# url = "https://www.basketball-reference.com/boxscores/201711070POR.html"
 	# url = "https://www.basketball-reference.com/boxscores/201704150CLE.html"
 	# url = "https://www.basketball-reference.com/boxscores/201401150ORL.html"
-
-
-	response = requests.get(url)
+	invalidURL = True
+	while invalidURL:
+		try:
+			response = requests.get(url)
+			invalidURL = False
+		except:
+			pass
 	soup = BeautifulSoup(response.content, "html.parser")
 
 
