@@ -188,6 +188,7 @@ def url_to_stats(url):
 			awayStats.update(teamDict)
 	homeStats["win pct"] = homeWins / (homeWins + homeLosses)
 	awayStats["win pct"] = awayWins / (awayWins + awayLosses)
+
 	gameInfo["home stats"] = homeStats
 	gameInfo["away stats"] = awayStats
 	gameInfo["home players"] = homePlayers
@@ -232,8 +233,8 @@ def main():
 	today = datetime.date.today()
 	lastDate = datetime.date.today()
 	
-	firstDate = datetime.date(1970, 7, 16)
-	lastDate = datetime.date(1975, 7, 15)
+	firstDate = datetime.date(1975, 7, 16)
+	lastDate = datetime.date(1976, 7, 15)
 
 	# lastDate = datetime.date(today.year, 3, 20)
 	# firstDate = datetime.date(2018, 3, 20)

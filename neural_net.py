@@ -80,7 +80,46 @@ def getStats(season):
 				print(", ".join(validStats))
 	return listOfStats
 
-def getInputsOutputs(seasons, stats):
+def getAverageStats(seasons, stats):
+	# finds the average, min, and max of the specified stats for the specified seasons
+	# outputs a list of the same size of stats but each item contains [average, min, max]
+	# this information is used to normalize the data to range from 0 to 1
+	statList = []
+	for stat in stats:
+		# contains a list of all the stat past the 10th games in specified seasons
+		occurencesOfStat = []
+		for season in seasons:
+			with open(season) as seasonJSONfile:
+				currentDictionary = json.load(seasonJSONfile)
+				teams = list(currentDictionary.keys())
+				teams = sorted(teams)
+				for team in teams:
+					for game in range(len(currentDictionary[team])):
+						homeTeam = currentDictionary[team][game]["teams"]["home"]
+						awayTeam = currentDictionary[team][game]["teams"]["away"]
+						if team == homeTeam:
+							otherTeam = awayTeam
+						else:
+							otherTeam = homeTeam
+						if team < otherTeam:
+							records = currentDictionary[team][game]["records"]
+							homeGP = records["home losses"] + records["home wins"]
+							awayGP = records["away losses"] + records["away wins"]
+							if (homeGP > 10) and (awayGP > 10):
+								occurencesOfStat.append(currentDictionary[team][game]["home stats"][stat])
+								occurencesOfStat.append(currentDictionary[team][game]["away stats"][stat])
+		statAvg = np.mean(occurencesOfStat)
+		statMin = min(occurencesOfStat)
+		statMax = max(occurencesOfStat)
+		statList.append([statAvg, statMin, statMax])
+	return statList
+
+
+
+
+
+
+def getInputsOutputs(seasons, stats, averageStats, prevGames):
 	x = []
 	y = []
 	for season in seasons:
@@ -106,32 +145,52 @@ def getInputsOutputs(seasons, stats):
 						awayGP = records["away losses"] + records["away wins"]
 						if (homeGP > 10) and (awayGP > 10):
 							scores = currentDictionary[team][game]["scores"]
-							# y is the difference between the home score and the away score
-							y.append(np.array([[scores["home"] - scores["away"]]]))
+							# # difference in the score is the output
+							# # y is the difference between the home score and the away score
+							# y.append(np.array([[scores["home"] - scores["away"]]]))
+							
+							# who won the game is the output
+							# 1 for home team, 0 for away team
+							if scores["home"] > scores["away"]:
+								y.append(np.array([[1]]))
+							else:
+								y.append(np.array([[0]]))							
+
+
 							gameInput = []
 							# statistics from the previous ten games are used for the input layer
-							for trainingGame in range(homeGP - 10, homeGP):
-								# checks to see if the home team was home or away in the previous 10 games
+							for trainingGame in range(homeGP - prevGames, homeGP):
+								# checks to see if the home team was home or away in the previous games
 								if currentDictionary[homeTeam][trainingGame]["teams"]["home"] == homeTeam:
-									for stat in stats:
-										gameInput.append([currentDictionary[homeTeam][trainingGame]["home stats"][stat]])
+									#for stat in stats
+									for statIndex in range(len(stats)):
+										stat = currentDictionary[homeTeam][trainingGame]["home stats"][stats[statIndex]]
+										normalizedStat = (stat - averageStats[statIndex][1]) / (averageStats[statIndex][2] - averageStats[statIndex][1])
+										gameInput.append([normalizedStat])
+										# gameInput.append([currentDictionary[homeTeam][trainingGame]["home stats"][stat]])
 										# print(gameInput)
 								else:
-									for stat in stats:
-										gameInput.append([currentDictionary[homeTeam][trainingGame]["away stats"][stat]])
+									for statIndex in range(len(stats)):
+										stat = currentDictionary[homeTeam][trainingGame]["away stats"][stats[statIndex]]
+										normalizedStat = (stat - averageStats[statIndex][1]) / (averageStats[statIndex][2] - averageStats[statIndex][1])
+										gameInput.append([normalizedStat])
 										# print(gameInput)
-							for trainingGame in range(awayGP - 10, awayGP):
+							for trainingGame in range(awayGP - prevGames, awayGP):
 								# checks to see if the home team was home or away in the previous 10 games
 								if currentDictionary[homeTeam][trainingGame]["teams"]["home"] == awayTeam:
-									for stat in stats:
-										gameInput.append([currentDictionary[homeTeam][trainingGame]["home stats"][stat]])
-										# print(gameInput)
+									for statIndex in range(len(stats)):
+										stat = currentDictionary[homeTeam][trainingGame]["home stats"][stats[statIndex]]
+										normalizedStat = (stat - averageStats[statIndex][1]) / (averageStats[statIndex][2] - averageStats[statIndex][1])
+										gameInput.append([normalizedStat])
 								else:
-									for stat in stats:
-										gameInput.append([currentDictionary[homeTeam][trainingGame]["away stats"][stat]])
-										# print(gameInput)
+									for statIndex in range(len(stats)):
+										stat = currentDictionary[homeTeam][trainingGame]["away stats"][stats[statIndex]]
+										normalizedStat = (stat - averageStats[statIndex][1]) / (averageStats[statIndex][2] - averageStats[statIndex][1])
+										gameInput.append([normalizedStat])
 							x.append(np.array(gameInput))
 	return (x,y)
+
+def validationSetError(w, b, x, y)
 
 
 def sigmoid(x):
@@ -206,6 +265,8 @@ def convertToMiniBatch(x, y, miniBatchSize):
 			miniBatchY.append(y.pop(randomNum))
 		allMiniBatchesX.append(miniBatchX)
 		allMiniBatchesY.append(miniBatchY)
+	allMiniBatchesX.append(x)
+	allMiniBatchesY.append(y)
 	return(allMiniBatchesX, allMiniBatchesY)
 		
 
@@ -245,11 +306,16 @@ def trainMiniBatch(x, y, w, b, nnStructure, learningRate):
 def main():
 	print()
 	print("Creates a neural network that grab statistics from specified seasons for the specified statistics")
-	print("Uses statistics from the previous 10 games as input and the difference in score as output")
+	print("Uses statistics from the previous games as input and the difference in score as output")
 
 	seasons = getSeasons()
 	stats = getStats(seasons[0])
-	inputsOutputs = getInputsOutputs(seasons, stats)
+	averageStats = getAverageStats(seasons, stats)
+	print(averageStats)
+
+	prevGames = int(input("Stats froms how many previous games? "))
+
+	inputsOutputs = getInputsOutputs(seasons, stats, averageStats, prevGames)
 	inputs = inputsOutputs[0]
 	outputs = inputsOutputs[1]
 
@@ -258,7 +324,6 @@ def main():
 	print()
 	print("The total number of games played during those seasons is %d" % (numOfGames))
 	batchSize = int(input("How many of those games would you like to use as training data? "))
-	batchSize = 300
 	# plucks training data from all games that between the specified seasons
 	# the rest of the data is used to test the results of the neural net after it's been trained
 	
@@ -269,8 +334,8 @@ def main():
 		trainingDataX.append(inputs.pop(randomNum))
 		trainingDataY.append(outputs.pop(randomNum))
 
+
 	miniBatchSize = int(input("Enter mini-batch size: "))
-	#miniBatchSize = 32
 
 	epochs = int(input("Enter number of epochs: "))
 
@@ -287,21 +352,33 @@ def main():
 	nnStructure.append(1)
 
 	errorFunction = []
+	(w, b) = initializeWeightsBiases(nnStructure)
 	for epoch in range(epochs):
-		print("Epoch %d" % (epoch))
+		# print("weights")
+		# print(w)
+		# print("biases")
+		# print(b)
+		# print("Epoch %d" % (epoch))
 		batchX = list(trainingDataX)
 		batchY = list(trainingDataY)
 		(miniBatchesX, miniBatchesY) = convertToMiniBatch(batchX, batchY, miniBatchSize)
 		totalError = 0
 		for miniBatchNum in range(len(miniBatchesX)):
-			if miniBatchNum == 0:
-				(w, b) = initializeWeightsBiases(nnStructure)
+			# if miniBatchNum == 0:
+				# (w, b) = initializeWeightsBiases(nnStructure)
 			(w,b,error) = trainMiniBatch(miniBatchesX[miniBatchNum], miniBatchesY[miniBatchNum], w, b, nnStructure, learningRate)
 			totalError += error
 		errorFunction.append(totalError/len(trainingDataX))
+		if epoch % 50 == 0:
+			print("Epoch %d" % (epoch))
+			print("weights")
+			print(w)
+			print("biases")
+			print(b)
 	plt.plot(errorFunction)
 	plt.ylabel("Average Difference in Score")
 	plt.xlabel("Number of Epochs")
+	plt.title("Cost Function")
 	plt.show()
 
 

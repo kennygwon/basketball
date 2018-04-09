@@ -23,10 +23,13 @@ def main():
 
 	# for i in range(5,0,-1):
 	# 	print(i)
+	lst = [4,5,8,15,2,7]
+	print(min(lst)) 
 
-	lst = [4,5,6]
-	plt.plot(lst)
-	plt.show()
+	# lst = [4,5,6]
+	# plt.plot(lst)
+	# plt.show()
+
 
 	# lst = np.array([[2],[3],[4],[5]])
 	# print(lst.shape)
