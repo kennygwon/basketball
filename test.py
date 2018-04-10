@@ -23,13 +23,22 @@ def main():
 
 	# for i in range(5,0,-1):
 	# 	print(i)
-	lst = [4,5,8,15,2,7]
-	print(min(lst)) 
 
 	# lst = [4,5,6]
 	# plt.plot(lst)
 	# plt.show()
 
+	# plt.figure(1)                # the first figure
+	# plt.subplot(211)             # the first subplot in the first figure
+	# plt.plot([1, 2, 3])
+	# plt.subplot(212)             # the second subplot in the first figure
+	# plt.plot([4, 5, 6])
+	# plt.figure(2)                # a second figure
+	# plt.plot([4, 5, 6]) 
+	# plt.show()
+
+	for i in range(2,4):
+		print(i)
 
 	# lst = np.array([[2],[3],[4],[5]])
 	# print(lst.shape)

@@ -8,6 +8,9 @@ from datetime import timedelta
 
 
 def getSeasons():
+	# prompts the user for a start season and end season
+	# makes sure there is a data file for the specified season
+	# returns the names of the list of text files between specified seasons
 	invalidSeason = True
 	while invalidSeason:
 		print()
@@ -50,7 +53,8 @@ def getSeasons():
 	return seasonTextFiles
 
 def getStats(season):
-	#prompts the user for statistics and checks to see that are valid stats
+	# prompts the user for statistic categories
+	# all stat categories are for the team
 	with open(season) as seasonJSONfile:
 		currentDictionary = json.load(seasonJSONfile)
 	invalidNum = True
@@ -80,7 +84,7 @@ def getStats(season):
 				print(", ".join(validStats))
 	return listOfStats
 
-def getAverageStats(seasons, stats):
+def getAverageStats(seasons, stats, prevGames):
 	# finds the average, min, and max of the specified stats for the specified seasons
 	# outputs a list of the same size of stats but each item contains [average, min, max]
 	# this information is used to normalize the data to range from 0 to 1
@@ -105,7 +109,7 @@ def getAverageStats(seasons, stats):
 							records = currentDictionary[team][game]["records"]
 							homeGP = records["home losses"] + records["home wins"]
 							awayGP = records["away losses"] + records["away wins"]
-							if (homeGP > 10) and (awayGP > 10):
+							if (homeGP > prevGames) and (awayGP > prevGames):
 								occurencesOfStat.append(currentDictionary[team][game]["home stats"][stat])
 								occurencesOfStat.append(currentDictionary[team][game]["away stats"][stat])
 		statAvg = np.mean(occurencesOfStat)
@@ -114,12 +118,11 @@ def getAverageStats(seasons, stats):
 		statList.append([statAvg, statMin, statMax])
 	return statList
 
-
-
-
-
-
 def getInputsOutputs(seasons, stats, averageStats, prevGames):
+	# gets the inputs and outputs that will be fed to the neural network
+	# the output consists of the difference in scores of a game
+	# the inputs consists of the statistics in the games leading up to
+	# the game where the score is used as the output
 	x = []
 	y = []
 	for season in seasons:
@@ -139,16 +142,13 @@ def getInputsOutputs(seasons, stats, averageStats, prevGames):
 					# since we check the teams in order
 					# if the team we are checking is greater than the other team for that game,
 					# we have already done that game
+					# this is because each game is stored in the home team and away team's dictionary
 					if team < otherTeam:
 						records = currentDictionary[team][game]["records"]
 						homeGP = records["home losses"] + records["home wins"]
 						awayGP = records["away losses"] + records["away wins"]
-						if (homeGP > 10) and (awayGP > 10):
-							scores = currentDictionary[team][game]["scores"]
-							# # difference in the score is the output
-							# # y is the difference between the home score and the away score
-							# y.append(np.array([[scores["home"] - scores["away"]]]))
-							
+						if (homeGP > prevGames) and (awayGP > prevGames):
+							scores = currentDictionary[team][game]["scores"]							
 							# who won the game is the output
 							# 1 for home team, 0 for away team
 							if scores["home"] > scores["away"]:
@@ -158,26 +158,10 @@ def getInputsOutputs(seasons, stats, averageStats, prevGames):
 
 
 							gameInput = []
-							# statistics from the previous ten games are used for the input layer
-							for trainingGame in range(homeGP - prevGames, homeGP):
+							# statistics from the previous games are used for the input layer
+							for trainingGame in range(homeGP - prevGames - 1, homeGP - 1):
 								# checks to see if the home team was home or away in the previous games
 								if currentDictionary[homeTeam][trainingGame]["teams"]["home"] == homeTeam:
-									#for stat in stats
-									for statIndex in range(len(stats)):
-										stat = currentDictionary[homeTeam][trainingGame]["home stats"][stats[statIndex]]
-										normalizedStat = (stat - averageStats[statIndex][1]) / (averageStats[statIndex][2] - averageStats[statIndex][1])
-										gameInput.append([normalizedStat])
-										# gameInput.append([currentDictionary[homeTeam][trainingGame]["home stats"][stat]])
-										# print(gameInput)
-								else:
-									for statIndex in range(len(stats)):
-										stat = currentDictionary[homeTeam][trainingGame]["away stats"][stats[statIndex]]
-										normalizedStat = (stat - averageStats[statIndex][1]) / (averageStats[statIndex][2] - averageStats[statIndex][1])
-										gameInput.append([normalizedStat])
-										# print(gameInput)
-							for trainingGame in range(awayGP - prevGames, awayGP):
-								# checks to see if the home team was home or away in the previous 10 games
-								if currentDictionary[homeTeam][trainingGame]["teams"]["home"] == awayTeam:
 									for statIndex in range(len(stats)):
 										stat = currentDictionary[homeTeam][trainingGame]["home stats"][stats[statIndex]]
 										normalizedStat = (stat - averageStats[statIndex][1]) / (averageStats[statIndex][2] - averageStats[statIndex][1])
@@ -185,18 +169,52 @@ def getInputsOutputs(seasons, stats, averageStats, prevGames):
 								else:
 									for statIndex in range(len(stats)):
 										stat = currentDictionary[homeTeam][trainingGame]["away stats"][stats[statIndex]]
+										normalizedStat = (stat - averageStats[statIndex][1]) / (averageStats[statIndex][2] - averageStats[statIndex][1])
+										gameInput.append([normalizedStat])
+							for trainingGame in range(awayGP - prevGames - 1, awayGP - 1):
+								# checks to see if the away team was home or away in the previous games
+								if currentDictionary[awayTeam][trainingGame]["teams"]["home"] == awayTeam:
+									for statIndex in range(len(stats)):
+										stat = currentDictionary[awayTeam][trainingGame]["home stats"][stats[statIndex]]
+										normalizedStat = (stat - averageStats[statIndex][1]) / (averageStats[statIndex][2] - averageStats[statIndex][1])
+										gameInput.append([normalizedStat])
+								else:
+									for statIndex in range(len(stats)):
+										stat = currentDictionary[awayTeam][trainingGame]["away stats"][stats[statIndex]]
 										normalizedStat = (stat - averageStats[statIndex][1]) / (averageStats[statIndex][2] - averageStats[statIndex][1])
 										gameInput.append([normalizedStat])
 							x.append(np.array(gameInput))
 	return (x,y)
 
-def validationSetError(w, b, x, y)
+def validationSetError(w, b, x, y, nnStructure):
+	# returns the average error for each iteration in the validation set
+	# this information is used to see when the neural network has begun to overtrain
+	totalError = 0
+	for iterationNum in range(len(x)):
+		(h, z) = feedForward(x[iterationNum], w, b)
+		totalError += abs(y[iterationNum].item(0) - h[len(nnStructure)].item(0))
+	averageError = totalError / len(x)
+	return averageError
 
+def testSetPercentage(w, b, x, y, nnStructure):
+	# we see what percentage of games was correctly guessed using the test set data
+	# the test set data does not influence the training of the network
+	testSetFunction = []
+	incorrectPredictions = 0
+	for iterationNum in range(len(x)):
+		(h,z) = feedForward(x[iterationNum], w, b)
+		if y[iterationNum].item(0) != round(h[len(nnStructure)].item(0)):
+			incorrectPredictions += 1
+		percentageCorrect = 1-(incorrectPredictions / (iterationNum+1))
+		testSetFunction.append(percentageCorrect)
+	return (testSetFunction, incorrectPredictions)
+	
 
 def sigmoid(x):
 	#takes in an np.array and applies the sigmoid function to each element of the array
 	#outputs an np.array of the same size
 	return 1 / (1 + np.exp(-x))
+
 def sigmoidDerivative(x):
 	return sigmoid(x) * (1 - sigmoid(x))
 
@@ -254,6 +272,7 @@ def hiddenLayerDelta(nextDelta, w, z):
 	return delta
 
 def convertToMiniBatch(x, y, miniBatchSize):
+	# creates mini batches from training data
 	allMiniBatchesX = []
 	allMiniBatchesY = []
 	while len(x) >= (2 * miniBatchSize):
@@ -271,7 +290,7 @@ def convertToMiniBatch(x, y, miniBatchSize):
 		
 
 def trainMiniBatch(x, y, w, b, nnStructure, learningRate):
-	
+	# 
 	(deltaW, deltaB) = initializeMeanWeightsBiases(nnStructure)
 	totalError = 0
 	for iterationNum in range(len(x)):
@@ -281,23 +300,12 @@ def trainMiniBatch(x, y, w, b, nnStructure, learningRate):
 			if layerNum == len(nnStructure):
 				delta[layerNum] = lastLayerDelta(y[iterationNum], h[layerNum], z[layerNum])
 				totalError += abs(y[iterationNum].item(0) - h[layerNum].item(0))
-				# print("y")
-				# print(y[iterationNum])
-				# print("h")
-				# print(h[layerNum])
-				# print("total error")
-				# print(totalError)
-
-
-
 			else:
 				if layerNum > 1:
 					delta[layerNum] = hiddenLayerDelta(delta[layerNum + 1], w[layerNum], z[layerNum])
 				deltaW[layerNum] += delta[layerNum + 1].dot(np.transpose(h[layerNum]))
 				deltaB[layerNum] += delta[layerNum + 1]
 		for layerNum in range(len(nnStructure) - 1, 0, -1):
-			# print(type(-learningRate * ((1/(len(x))) * deltaW[layerNum])))
-			# print(deltaW[layerNum])
 			w[layerNum] += -learningRate * ((1/(len(x))) * deltaW[layerNum])
 			b[layerNum] += -learningRate * ((1/(len(x))) * deltaB[layerNum])
 	return (w, b, totalError)
@@ -310,15 +318,14 @@ def main():
 
 	seasons = getSeasons()
 	stats = getStats(seasons[0])
-	averageStats = getAverageStats(seasons, stats)
-	print(averageStats)
 
-	prevGames = int(input("Stats froms how many previous games? "))
+	prevGames = int(input("Stats from how many previous games? "))
 
+	# gets the inputs and outputs to be used for supervised learning in the neural network
+	averageStats = getAverageStats(seasons, stats, prevGames)
 	inputsOutputs = getInputsOutputs(seasons, stats, averageStats, prevGames)
 	inputs = inputsOutputs[0]
 	outputs = inputsOutputs[1]
-
 	
 	numOfGames = len(inputs)
 	print()
@@ -327,6 +334,9 @@ def main():
 	# plucks training data from all games that between the specified seasons
 	# the rest of the data is used to test the results of the neural net after it's been trained
 	
+	miniBatchSize = int(input("Enter mini-batch size: "))
+	
+	# separates the training data from the rest of the data
 	trainingDataX = []
 	trainingDataY = []
 	for i in range(batchSize):
@@ -334,13 +344,21 @@ def main():
 		trainingDataX.append(inputs.pop(randomNum))
 		trainingDataY.append(outputs.pop(randomNum))
 
+	#plucks validation data from the remaining data
+	validationSize = int(input("Enter validation set size: "))
+	validationDataX = []
+	validationDataY = []
+	for i in range(validationSize):
+		randomNum = random.randrange(0, len(inputs))
+		validationDataX.append(inputs.pop(randomNum))
+		validationDataY.append(outputs.pop(randomNum))
 
-	miniBatchSize = int(input("Enter mini-batch size: "))
+	# the rest of the data is used as test data
+	testDataX = inputs
+	testDataY = outputs
 
 	epochs = int(input("Enter number of epochs: "))
-
 	learningRate = float(input("Enter learning rate: "))
-
 
 	firstLayerSize = len(inputs[0])
 	nnStructure = [firstLayerSize]
@@ -352,33 +370,40 @@ def main():
 	nnStructure.append(1)
 
 	errorFunction = []
+	validationErrorFunction = []
 	(w, b) = initializeWeightsBiases(nnStructure)
+	# randomly shuffles the mini-batches during each epoch
 	for epoch in range(epochs):
-		# print("weights")
-		# print(w)
-		# print("biases")
-		# print(b)
-		# print("Epoch %d" % (epoch))
 		batchX = list(trainingDataX)
 		batchY = list(trainingDataY)
 		(miniBatchesX, miniBatchesY) = convertToMiniBatch(batchX, batchY, miniBatchSize)
 		totalError = 0
+		# performs gradient descent for each mini-batch
 		for miniBatchNum in range(len(miniBatchesX)):
-			# if miniBatchNum == 0:
-				# (w, b) = initializeWeightsBiases(nnStructure)
 			(w,b,error) = trainMiniBatch(miniBatchesX[miniBatchNum], miniBatchesY[miniBatchNum], w, b, nnStructure, learningRate)
 			totalError += error
+		# calculates the error for each epoch
 		errorFunction.append(totalError/len(trainingDataX))
-		if epoch % 50 == 0:
-			print("Epoch %d" % (epoch))
-			print("weights")
-			print(w)
-			print("biases")
-			print(b)
-	plt.plot(errorFunction)
-	plt.ylabel("Average Difference in Score")
+		validationErrorFunction.append(validationSetError(w, b, validationDataX, validationDataY, nnStructure))
+
+	(testResults, incorrectPredictions) = testSetPercentage(w, b, testDataX, testDataY, nnStructure)
+	print("The program was able to guess %d out of %d games correctly for %f%% success rate" % (incorrectPredictions, len(testResults), 100*testResults[-1]))
+	
+	# plots the cost function and the percentage of games correctly guessed
+	plt.figure(1)
+	plt.plot(errorFunction, label = "Training Data")
+	plt.plot(validationErrorFunction, label = "Validation Data")
+	plt.ylabel("Average Cost Difference")
 	plt.xlabel("Number of Epochs")
 	plt.title("Cost Function")
+	plt.legend()
+
+	plt.figure(2)
+	plt.plot(testResults, label = "Test Set Data")
+	plt.ylabel("Percentage of Games")
+	plt.xlabel("Number of Games")
+	plt.title("Percentage of Games Guessed")
+	plt.legend()
 	plt.show()
 
 
