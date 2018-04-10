@@ -7,6 +7,17 @@ import time
 from bs4 import BeautifulSoup
 import datetime
 
+"""
+This file is used to scrape box scores and statistics from basketball refernce.
+The statistics and written to txt files which are named after the season.
+Each season and playoff txt file contains a dictionary containing the teams that played in that season.
+Each team consists of a list containing information for each game it played.
+Each game consists of a dictionary with information such as the teams who played, the scores, the records
+of the teams, the team statistics for both teams, and the individual statistics for players on both teams.
+
+The start and end dates for which this program will search for basketball games can be specified at the
+beginning of the main function.
+"""
 
 def get_dates_between(startDate, endDate):
 	#given a start date and end date it ouputs a list of all dates between them
@@ -15,42 +26,21 @@ def get_dates_between(startDate, endDate):
 	while abs(endDate - startDate).days > 0:
 		allDates.append(startDate)
 		startDate = startDate + datetime.timedelta(days = 1)
-		# print("startDate: ")
-		# print(startDate)
-		# print("endDate: ")
-		# print(endDate)
 	allDates.append(endDate)
 	return allDates
 
 def url_to_stats(url):
-	#returns a dictionary containing the information about a single game
-	# allPlayers = {}
-	# emptyPlayerStats = {}
+	# returns a dictionary containing the information about a single game
 	gameInfo = {}
 	homeStats = {}
 	awayStats = {}
 	homePlayers = {}
 	awayPlayers = {}
 
-	#http = urllib3.PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=certifi.where())
-	#r = http.request("GET", "https://www.basketball-reference.com/boxscores/201803120OKC.html")
-	# url = "https://www.basketball-reference.com/boxscores/201803120OKC.html"
-	# url = "https://www.basketball-reference.com/boxscores/201710210CLE.html"
-
-
-	# url = "https://www.basketball-reference.com/boxscores/201711070POR.html"
-	# url = "https://www.basketball-reference.com/boxscores/201704150CLE.html"
-	# url = "https://www.basketball-reference.com/boxscores/201401150ORL.html"
-
-
 	response = requests.get(url)
 	soup = BeautifulSoup(response.content, "html.parser")
 
-
-	# print(soup.prettify())
-
 	#finds the home and away teams
-	#hard-coded
 	title = soup.find_all("title")[0].get_text().split(" Box Score, ")
 	teamsPlaying = title[0]
 	date = title[1].split(" |")[0]
@@ -60,8 +50,7 @@ def url_to_stats(url):
 	gameInfo["teams"] = teamsList
 
 
-
-
+	# find scores and records
 	scores = soup.find_all("div", class_="score")
 	awayRecord = (scores[0].findNext("div").get_text().split("-"))
 	awayWins = int(awayRecord[0])
@@ -77,10 +66,6 @@ def url_to_stats(url):
 	gameInfo["records"] = records
 	scoresList = {"away" : awayScore, "home" : homeScore}
 	gameInfo["scores"] = scoresList
-
-	# print()
-	# print("home team: %s %d" % (homeTeam, homeScore))
-	# print("away team: %s %d" % (awayTeam, awayScore))
 	
 	#creates teams which is a list of all the tables on the webpage
 	#the try/except prevents tables with only pictures of the boxscore from being added
@@ -94,6 +79,7 @@ def url_to_stats(url):
 		except:
 			pass
 
+	# determines which team each player plays for
 	for i in range(len(teams)):
 		if i < len(teams)/2:
 			memberTeam = awayTeam
@@ -115,25 +101,29 @@ def url_to_stats(url):
 				# print(playerName)
 			
 			playerDict = {}
+			# iterate through each row of data in the box score
 			for data in allData:
+				# if the statistic is empty because the player did not play
+				# could also be empty beacause that statistic was not recorded that year
+				# if it is empty, it is recorded as a 0
 				if data.get_text() == "":
 					stat = 0
 					statCategory = data.get("data-stat")
 				else:
+					# nested try/except ensures the data is stored as the correct type
 					try:
 						stat = int(data.get_text())
 					except:
 						try:
 							stat = float(data.get_text())
+						# the : in the minutes played category means it is originally stored as a string
 						except:
 							timePlayed = data.get_text()
 							minutes = int(timePlayed.split(":")[0])
 							seconds = int(timePlayed.split(":")[1])/60
-							# timePlayed = datetime.datetime.strptime(data.get_text(), "%M:%S")
-							# minutes = timePlayed.minute
-							# seconds = timePlayed.second/60
 							stat = minutes + seconds
 					statCategory = data.get("data-stat")
+					# # prints the stat category and stat
 					# if type(stat) == int:
 					# 	print("%s: %d" % (statCategory, stat))
 					# elif type(stat) == float:
@@ -153,11 +143,7 @@ def url_to_stats(url):
 						awayPlayers[playerName] = {}
 						awayPlayers[playerName][statCategory] = stat					
 
-				# playerDict[statCategory] = stat
-			# if memberTeam == homeTeam:
-				# homePlayers[playerName] = playerDict
-			# else:
-				# awayPlayers[playerName] = playerDict
+		# at the foot of each table is the team statistics
 		foot = teams[i].find("tfoot")
 		allRows = foot.find_all("tr")
 		# print()
@@ -178,6 +164,7 @@ def url_to_stats(url):
 							stat = homeScore - awayScore
 				statCategory = data.get("data-stat")
 				teamDict[statCategory] = stat
+				# # prints the stat category and the stat
 				# if type(stat) == int:
 				# 	print ("%s: %d" % (statCategory, stat))
 				# else:
@@ -186,6 +173,7 @@ def url_to_stats(url):
 			homeStats.update(teamDict)
 		else:
 			awayStats.update(teamDict)
+	
 	homeStats["win pct"] = homeWins / (homeWins + homeLosses)
 	awayStats["win pct"] = awayWins / (awayWins + awayLosses)
 
@@ -197,12 +185,12 @@ def url_to_stats(url):
 	return gameInfo
 
 def getSeason(url):
+	# given a link to a boxscore, parses the html doc and returns the season
+	# season has the format "2012-13"
 	response = requests.get(url)
 	soup = BeautifulSoup(response.content, "html.parser")
-	season =soup.find_all("ul")[4].find_all("li")[2].get_text().split(" NBA")[0]
+	season = soup.find_all("ul")[4].find_all("li")[2].get_text().split(" NBA")[0]
 	return season
-	# print(soup.prettify())
-
 
 def day_to_boxscore_url(date):
 	#this function takes in a date and outputs the links of all the games on that day
@@ -213,7 +201,6 @@ def day_to_boxscore_url(date):
 	year = date.strftime("%Y")
 	url = "https://www.basketball-reference.com/boxscores/?month=%s&day=%s&year=%s" % (month,day,year)
 
-	# url = "https://www.basketball-reference.com/boxscores/?month=03&day=18&year=2018"
 	response = requests.get(url)
 	soup = BeautifulSoup(response.content, "html.parser")
 	games = soup.find_all("p", class_="links")
@@ -228,28 +215,22 @@ def day_to_boxscore_url(date):
 
 
 def main():
-	# print(today())
-
-	today = datetime.date.today()
-	lastDate = datetime.date.today()
 	
+	# specifies the start and end date for scraping stats
 	firstDate = datetime.date(1975, 7, 16)
 	lastDate = datetime.date(1976, 7, 15)
 
-	# lastDate = datetime.date(today.year, 3, 20)
-	# firstDate = datetime.date(2018, 3, 20)
-
-	# url = "https://www.basketball-reference.com/boxscores/199303240PHI.html"
-	# url_to_stats(url)
-
+	# gets dates between specified dates
 	dates = get_dates_between(firstDate, lastDate)
 	for day in dates:
-		print()
 		print(day)
+		# converts days to boxscore urls
 		boxscoreLinks = day_to_boxscore_url(day)
+		# scrapes the data for each box score url
 		for url in boxscoreLinks:
 			game = url_to_stats(url)
-
+			
+			# if connection to website fails, tries again
 			gettingSeason = True
 			while gettingSeason:
 				try:
@@ -257,10 +238,8 @@ def main():
 					gettingSeason = False
 				except:
 					pass
-				
 
 			seasonTextFile = season + ".txt"
-
 			#checks to see if a txt file for the season exists
 			try:	
 				file = open(seasonTextFile, "r")
@@ -282,27 +261,28 @@ def main():
 			try:
 				if (len(currentDictionary.get(homeTeam)) + 1) != gameDictionary.get("records").get("home wins") + gameDictionary.get("records").get("home losses"):
 					textOutfile = season +"_playoffs" + ".txt"
-					print(len(currentDictionary.get(homeTeam)))
-					print(gameDictionary.get("records").get("home wins"))
-					print(gameDictionary.get("records").get("home losses"))
 			except:
 				pass
 
+			# prints the scores for the game
 			print("%s (%d) vs %s (%d) in %s" % (gameDictionary.get("teams").get("home"), gameDictionary.get("scores").get("home"), gameDictionary.get("teams").get("away"), gameDictionary.get("scores").get("away"), textOutfile))
-			# print(textOutfile)
 			if textOutfile != seasonTextFile:
+				# tries to load the playoff text file as the current dictionary
 				try:	
 					file = open(textOutfile, "r")
 					file.close()
 					with open(textOutfile) as playoffJSONfile:
 						currentDictionary = json.load(playoffJSONfile)
+				# if the playoff text file does not exists, creates a new one
+				# and creates an empty dictionary
 				except:
 					file = open(textOutfile, "w")
 					file.close()
 					currentDictionary = {}
 
 
-			#checks to see if the list of games for a team is empty
+			# checks to see if the list of games for a team is empty
+			# creates a new list of games if there is none
 			if currentDictionary.get(gameDictionary.get("teams").get("home")) == None:
 				currentDictionary[gameDictionary.get("teams").get("home")] = [gameDictionary]
 			else:
@@ -312,81 +292,7 @@ def main():
 			else:
 				currentDictionary.get(gameDictionary.get("teams").get("away")).append(gameDictionary)
 			
-			
+			# writes to textOutfile
 			with open(textOutfile, "w") as outfile:
 				json.dump(currentDictionary, outfile)
-
-
-
-
-
-
-	
-
-
-	# oldDictionary = url_to_stats(url)
-	# print(oldDictionary.get("home players").get("Jim Eakins"))
-	# print(url_to_stats(url).get("home players").get("C.J. McCollum").get("off_rtg"))
-
-
-	# allPlayers = {}
-	# emptyPlayerStats = {}
-
-
-
-	# #http = urllib3.PoolManager(cert_reqs='CERT_REQUIRED', ca_certs=certifi.where())
-	# #r = http.request("GET", "https://www.basketball-reference.com/boxscores/201803120OKC.html")
-	# url = "https://www.basketball-reference.com/boxscores/201803120OKC.html"
-	# # url = "https://www.basketball-reference.com/boxscores/201710210CLE.html"
-
-	# response = requests.get(url)
-	# soup = BeautifulSoup(response.content, "html.parser")
-
-	# #print(soup.prettify())
-
-	# #finds the home and away teams
-	# #hard-coded
-	# title = soup.find_all("title")[0].get_text().split(" Box Score, ")
-	# teamsPlaying = title[0]
-	# date = title[1].split(" |")[0]
-	# awayTeam = teamsPlaying.split(" at ")[0]
-	# homeTeam = teamsPlaying.split(" at ")[1]
-
-	# scores = soup.find_all("div", class_="score")
-	# awayScore = int(scores[0].get_text())
-	# homeScore = int(scores[1].get_text())
-	# # print("home team: %s %d" % (homeTeam, homeScore))
-	# # print("away team: %s %d" % (awayTeam, awayScore))
-
-	
-	# teams = soup.find_all("tbody")
-	# for i in range(len(teams)):
-	# 	if i % 2 == 0:
-	# 		memberTeam = awayTeam
-	# 	else:
-	# 		memberTeam = homeTeam
-	# 	# print()
-	# 	# print(memberTeam)
-	# 	allRows = teams[i].find_all("tr")
-	# 	for row in allRows:
-	# 		allData = row.find_all("td")
-	# 		#eliminates starters and reserves heading
-	# 		if len(allData) > 0:
-	# 			playerName = row.find("th").get_text()
-	# 			# print()
-	# 			# print(playerName)
-			
-	# 		if len(allData) == 1:
-	# 			print("DNP")
-
-	# 		for data in allData:
-	# 			try:
-	# 				stat = int(data.get_text())
-	# 			except:
-	# 				stat = data.get_text()
-	# 			statCategory = data.get("data-stat")
-	# 			# try:
-	# 			# 	print ("%s: %d" % (statCategory, stat))
-	# 			# except:
-	# 			# 	print ("%s: %s" % (statCategory, stat))
 main()

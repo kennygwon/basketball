@@ -6,6 +6,22 @@ import matplotlib.pyplot as plt
 from datetime import date
 from datetime import timedelta
 
+"""
+Creates a feedforward multi-layer neural network trained by mini-batch gradient descent
+to predict the winner of basketball games.
+For each game that is predicted, the statistics for the games leading up to that game
+are used as inputs for the neural network and the winner of the game (home or away team)
+is used as the output.
+The user can specify the seasons from which games are picked, the statistics that are used
+as input, and the number of games prior to the predicted game that are used as input.
+The user is also prompted for information used to structure the neural network such as the
+training data size, batch size, mini-batch size, number of epochs, learning rate, number of
+layers, and nodes per layer.
+
+A recommended input is using def_rtg and off_rtg, 2 games prior to the predicted games,
+training data size = 300, mini-batch size = 30, validation size = 1000, epochs = 150,
+learning rate = 0.1, and number of layers = 2.
+"""
 
 def getSeasons():
 	# prompts the user for a start season and end season
