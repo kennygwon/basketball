@@ -403,7 +403,7 @@ def main():
 		validationErrorFunction.append(validationSetError(w, b, validationDataX, validationDataY, nnStructure))
 
 	(testResults, incorrectPredictions) = testSetPercentage(w, b, testDataX, testDataY, nnStructure)
-	print("The program was able to guess %d out of %d games correctly for %f%% success rate" % (incorrectPredictions, len(testResults), 100*testResults[-1]))
+	print("The program was able to guess %d out of %d games correctly for %f%% success rate" % ((len(testResults)-incorrectPredictions), len(testResults), 100*testResults[-1]))
 	
 	# plots the cost function and the percentage of games correctly guessed
 	plt.figure(1)
