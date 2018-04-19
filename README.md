@@ -16,5 +16,31 @@ By selecting the inputs as offensive rating and defensive rating for the two gam
 
 Using stalled progress on the validation set as an indication that the network begins to overtrain around epoch 120, the neural network was then trained for 120 epochs before training was stopped.  The test set data was then used and it was found that the neural network was able to correctly predict the winner of the game for around 62% of the games which is certainly better than the expected 50% had it randomly chosen a winner.
 
+## Installation
+`$ pip3 install matplotlib`
+
+`$ pip3 install numpy`
+
+### Usage
+Below is sampe input to construct the neural network.
+<pre>
+Please enter the first season: <b>1992-93</b>
+Please enter the second season: <b>1995-96</b>
+
+How many statistics to be used as input? <b>2</b>
+Enter a stat category: <b>def_rtg</b>
+Enter a stat category: <b>off_rtg</b>
+Stats froms how many previous games? <b>2</b>
+
+The total number of games played during those seasons in 4395
+How many of those games would you like to use as training data? <b>300</b>
+Enter mini-batch size: <b>30</b>
+Enter validation set size: <b>1500</b>
+Enter number of epochs: <b>300</b>
+Enter learning rate: <b>0.1</b>
+Enter number of layers: <b>2</b>
+The number of nodes in the first layer is 8
+</pre>
+
 ### boxscore_scraper.py
 Given a start date and end date, this program searches for any NBA games played between these dates.  Using basketballreference.com, the boxscores from each of these games are stored as JSON files and then as txt files to be used as input and output for training the neural network.  Aside from the team statistics and scores necessary for training the neural network, other information obtained from the boxscore scraper includes individual player statistics, and records.
