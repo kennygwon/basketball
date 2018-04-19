@@ -22,8 +22,10 @@ Using stalled progress on the validation set as an indication that the network b
 `$ pip3 install numpy`
 
 ### Usage
-Below is sampe input to construct the neural network.
+Below is sample input to construct the neural network:
 <pre>
+python neural_net.py
+
 Please enter the first season: <b>1992-93</b>
 Please enter the second season: <b>1995-96</b>
 
@@ -40,7 +42,12 @@ Enter number of epochs: <b>300</b>
 Enter learning rate: <b>0.1</b>
 Enter number of layers: <b>2</b>
 The number of nodes in the first layer is 8
+The program was able to guess 1609 out of 2595 games correctly for 62.003854% success rate
 </pre>
+The cost for the training data and validation data are graphed as well as the prediction success rate:
+![same_input_graph](https://user-images.githubusercontent.com/23203851/38967661-1ff45e00-4356-11e8-9f06-e42fedfc326e.png)
+![sample_input_results](https://user-images.githubusercontent.com/23203851/38967666-24b6e872-4356-11e8-9c76-30f40d8c4cbf.png)
 
+## Other
 ### boxscore_scraper.py
 Given a start date and end date, this program searches for any NBA games played between these dates.  Using basketballreference.com, the boxscores from each of these games are stored as JSON files and then as txt files to be used as input and output for training the neural network.  Aside from the team statistics and scores necessary for training the neural network, other information obtained from the boxscore scraper includes individual player statistics, and records.
