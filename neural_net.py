@@ -89,7 +89,9 @@ def getStats(season):
 		invalidStatistic = True
 		while invalidStatistic:
 			statistic = input("Enter a stat category: ")
-			if statistic in validStats:
+			if statistic == "win_pct":
+				print("Win percentage not yet supported")
+			elif statistic in validStats:
 				if statistic not in listOfStats:
 					listOfStats.append(statistic)
 					invalidStatistic = False
